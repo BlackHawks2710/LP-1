@@ -1,0 +1,142 @@
+db.createCollection("EMPLOYEE")
+
+db.EMPLOYEE.insertMany([
+  {
+    empid: 101,
+    ename: "Sara",
+    city: "Baroda",
+    education: "M.Tech",
+    salary: 50000,
+    post: "Professor",
+    join_date: ISODate("2015-03-20"),
+    leave_date: null,
+    skills: ["Programming", "AI"],
+    department: "CSE"
+  },
+  {
+    empid: 102,
+    ename: "Mohit",
+    city: "Ahmedabad",
+    education: "PhD",
+    salary: 60000,
+    post: "Lecturer",
+    join_date: ISODate("2018-05-20"),
+    leave_date: null,
+    skills: ["Programming", "Database"],
+    department: "CSE"
+  },
+  {
+    empid: 103,
+    ename: "Rahul",
+    city: "Pune",
+    education: "MBA",
+    salary: 30000,
+    post: "Accountant",
+    join_date: ISODate("2019-02-15"),
+    leave_date: null,
+    skills: ["Management", "Finance"],
+    department: "Account"
+  },
+  {
+    empid: 104,
+    ename: "Shalini",
+    city: "Pune",
+    education: "B.Tech",
+    salary: 45000,
+    post: "Assistant",
+    join_date: ISODate("2020-11-20"),
+    leave_date: null,
+    skills: ["Programming"],
+    department: "FE"
+  }
+  // Add more employees as necessary
+]);
+
+1. List all employees from the institute
+
+db.EMPLOYEE.find();
+
+2. List the employee details from Baroda or Ahmedabad and working in the CSE department
+
+db.EMPLOYEE.find({
+  city: { $in: ["Baroda", "Ahmedabad"] },
+  department: "CSE"
+});
+
+3. List empid, ename, department, and skills of employees whose join_date is the 20th of any month
+
+db.EMPLOYEE.find(
+  { join_date: { $regex: "-20T" } },  // Pattern matches dates with "20" as the day
+  { empid: 1, ename: 1, department: 1, skills: 1, _id: 0 }
+);
+
+4. Calculate the total experience of each employee, considering today’s date
+
+db.EMPLOYEE.aggregate([
+  {
+    $project: {
+      ename: 1,
+      join_date: 1,
+      experience_in_years: {
+        $divide: [{ $subtract: [new Date(), "$join_date"] }, 1000 * 60 * 60 * 24 * 365] // Convert milliseconds to years
+      }
+    }
+  }
+]);
+
+5. List employees in FE department whose names start with ‘S’ or ‘M’ and who have “Programming” skill
+
+db.EMPLOYEE.find({
+  department: "FE",
+  ename: { $regex: "^[SsMm]", $options: "i" },
+  skills: "Programming"
+});
+
+6. Count the number of employees working in ETC department in Pune
+
+db.EMPLOYEE.countDocuments({ department: "ETC", city: "Pune" });
+7. Calculate department-wise total salary and display only the department that pays the maximum salary
+javascript
+Copy code
+db.EMPLOYEE.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      total_salary: { $sum: "$salary" }
+    }
+  },
+  {
+    $sort: { total_salary: -1 }
+  },
+  {
+    $limit: 1
+  }
+]);
+
+Step 3: Index Operations
+1. Create an Index on department
+
+db.EMPLOYEE.createIndex({ department: 1 });
+
+2. Get the Indexes
+
+db.EMPLOYEE.getIndexes();
+
+3. Drop the Index on department
+
+db.EMPLOYEE.dropIndex("department_1");
+
+Step 4: Aggregation to Display Total Number of Employees per Department
+Using an aggregation pipeline to count employees in each department:
+
+db.EMPLOYEE.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      total_employees: { $sum: 1 }
+    }
+  },
+  {
+    $project: { department: "$_id", total_employees: 1, _id: 0 }
+  }
+]);

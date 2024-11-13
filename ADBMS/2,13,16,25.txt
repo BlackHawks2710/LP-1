@@ -1,0 +1,171 @@
+db.createCollection("emp")
+
+db.emp.insertMany([
+// Administrative Department (4 employees)
+{
+"empid": "A101",
+"ename": "Alice Williams",
+"department": "Administrative",
+"city": "Bangalore",
+"education": "MBA",
+"salary": 45000,
+"post": "Admin Manager",
+"join_date": new Date("2022-01-15"),
+"leaving_date": null,
+"skills": ["Organization", "Project Management"]
+},
+{
+"empid": "A102",
+"ename": "John Smith",
+"department": "Administrative",
+"city": "Mumbai",
+"education": "B.A. in Management",
+"salary": 38000,
+"post": "Admin Executive",
+"join_date": new Date("2021-06-10"),
+"leaving_date": null,
+"skills": ["Office Management", "Communication"]
+},
+{
+"empid": "A103",
+"ename": "Sophia Brown",
+"department": "Administrative",
+"city": "Chennai",
+"education": "B.Com",
+"salary": 40000,
+"post": "Office Assistant",
+"join_date": new Date("2023-03-25"),
+"leaving_date": null,
+"skills": ["Scheduling", "Customer Service"]
+},
+{
+"empid": "A104",
+"ename": "David Harris",
+"department": "Administrative",
+"city": "Delhi",
+"education": "MBA",
+"salary": 48000,
+"post": "Admin Supervisor",
+"join_date": new Date("2022-09-10"),
+"leaving_date": null,
+"skills": ["Team Management", "Leadership"]
+},
+// Account Department (3 employees)
+{
+"empid": "AC101",
+"ename": "Sarah Taylor",
+"department": "Account",
+"city": "Bangalore",
+"education": "M.Com",
+"salary": 55000,
+"post": "Account Manager",
+"join_date": new Date("2021-02-14"),
+"leaving_date": null,
+"skills": ["Financial Reporting", "Auditing"]
+},
+{
+"empid": "AC102",
+"ename": "William Scott",
+"department": "Account",
+"city": "Pune",
+"education": "B.Com",
+"salary": 50000,
+"post": "Accountant",
+"join_date": new Date("2022-07-22"),
+"leaving_date": null,
+"skills": ["Taxation", "Accounting Software"]
+},
+// CSE Department (2 employees)
+{
+"empid": "CSE101",
+"ename": "James Watson",
+"department": "CSE",
+"city": "Bangalore",
+"education": "B.Tech in CSE",
+"salary": 60000,
+"post": "Software Engineer",
+"join_date": new Date("2021-01-20"),
+"leaving_date": null,
+"skills": ["Java", "Spring"]
+},
+{
+"empid": "CSE102",
+"ename": "Emily White",
+"department": "CSE",
+"city": "Hyderabad",
+"education": "M.Tech in CSE",
+"salary": 70000,
+"post": "Senior Software Engineer",
+"join_date": new Date("2020-11-18"),
+"leaving_date": null,
+"skills": ["Python", "Django"]
+},
+// IT Department (1 employee)
+{
+"empid": "IT101",
+"ename": "Daniel Green",
+"department": "IT",
+"city": "Bangalore",
+"education": "B.Tech in IT",
+"salary": 65000,
+"post": "Network Engineer",
+"join_date": new Date("2022-04-10"),
+"leaving_date": null,
+"skills": ["Networking", "Linux"]
+},
+// Library Department (1 employee)
+{
+"empid": "LIB101",
+"ename": "Olivia Davis",
+"department": "Library",
+"city": "Delhi",
+"education": "B.Lib.Sc.",
+"salary": 35000,
+"post": "Library Assistant",
+"join_date": new Date("2021-09-15"),
+"leaving_date": null,
+"skills": ["Cataloguing", "Research Assistance"]
+} ]);
+db.emp.find({ salary: { $gte: 30000, $lte: 45000 } })
+
+db.emp.aggregate([
+  { $group: { _id: "$department", total_emp: { $sum: 1 } } },
+  { $match: { total_emp: { $gte: 4 } } }
+])
+
+
+
+db.employees.countDocuments({ department: "IT" })
+
+
+db.emp.find().sort({salary:-1}).limit(1)
+
+
+
+db.emp.aggregate([{$group:{_id:"$department",total_emp:{$sum:1}}},{$sort:{total_emp:-1}},{$limit:1}])
+[ { _id: 'Administrative', total_emp: 4 } ]
+
+
+
+db.emp.updateMany({department:"IT"},{$set:{department:"Information Technology"}})
+
+
+emp> db.emp.createIndex({department:1})
+department_1
+
+emp> db.emp.getIndexes();
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { department: 1 }, name: 'department_1' }
+]
+
+emp> db.emp.dropIndex({department:1});
+{ nIndexesWas: 2, ok: 1 }
+
+
+
+emp> var map=function(){emit(this.department,1)};
+emp> var reduce=function(key,values){return Array.sum(values);}
+emp> db.emp.mapReduce(map,reduce,{out:"Total_emp"})
+
+db.Total_emp.find();

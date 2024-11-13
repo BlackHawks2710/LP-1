@@ -1,0 +1,147 @@
+Db.createCollection(“order”)
+
+
+db.order.insertMany([
+{
+"customerName": "John Doe",
+"customerCity": "Pune",
+"products": [
+{ "name": "Mobile", "price": 15000, "quantity": 2 },
+{ "name": "Laptop", "price": 50000, "quantity": 1 }
+],
+"totalAmount": 85000
+},
+{
+"customerName": "Jane Smith",
+"customerCity": "Mumbai",
+"products": [
+{ "name": "Shoes", "price": 3000, "quantity": 1 },
+{ "name": "Cloth", "price": 2000, "quantity": 1 }
+],
+"totalAmount": 5000
+},
+{
+"customerName": "Alice Brown",
+"customerCity": "Pune",
+"products": [
+{ "name": "Laptop", "price": 55000, "quantity": 1 },
+{ "name": "Mobile", "price": 12000, "quantity": 1 }
+],
+"totalAmount": 67000
+},
+{
+"customerName": "Bob White",
+"customerCity": "Delhi",
+"products": [
+{ "name": "Shoes", "price": 3500, "quantity": 2 },
+{ "name": "Cloth", "price": 1500, "quantity": 2 }
+],
+"totalAmount": 12000
+},
+{
+"customerName": "Mary Green",
+"customerCity": "Pune",
+"products": [
+{ "name": "Shoes", "price": 3000, "quantity": 1 },
+{ "name": "Cloth", "price": 2500, "quantity": 1 }
+],
+"totalAmount": 5500
+}
+])
+
+
+order> db.order.find({})
+
+
+db.order.find({ "products.name": "Mobile" }, { "customerName": 1, "_id": 0 })
+[ { customerName: 'John Doe' }, { customerName: 'Alice Brown' } ]
+
+db.order.distinct("customerName", { "products.name": "Mobile" })
+[ 'Alice Brown', 'John Doe' ]
+
+
+
+
+
+
+db.order.update({"products.name":"Laptop","products.quantity":1},{$set:{"products.$.quantity":3}})
+DeprecationWarning: Collection.update() is deprecated. Use updateOne, updateMany, or bulkWrite.
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+
+
+
+
+db.order.countDocuments({ "customerCity": { $exists: true, $eq: "Pune" } })
+3
+
+
+
+
+db.order.distinct("customerName", { "products.name": { $all: ["Shoes", "Cloth"] } })
+[ 'Bob White', 'Jane Smith', 'Mary Green' ]
+
+db.orders.find({
+  "products.name": { $all: ["Shoes", "Cloth"] }
+}, { "customerName": 1, _id: 0 })
+
+
+
+
+
+order> db.order.aggregate([ { $group: { _id: "$customerName", totalSpent: { $sum: "$totalAmount" } } }, { $sort: { totalSpent: -1 } }, { $limit: 3 }] )
+[
+  { _id: 'John Doe', totalSpent: 85000 },
+  { _id: 'Alice Brown', totalSpent: 67000 },
+  { _id: 'Bob White', totalSpent: 12000 }
+
+
+
+
+
+ db.order.find({ "totalAmount": { $gt: 20000 } })
+
+
+
+
+
+db.order.createIndex({ "customerName": 1 })
+db.order.getIndexes()
+db.order.dropIndex("customerName_1")
+
+
+
+
+
+
+var map = function() {
+  // Iterate over each product in the products array
+  this.products.forEach(function(product) {
+    // Emit the orderId with the price of each product
+    emit(this.orderId, product.price);
+  });
+};
+
+
+
+var reduce = function(key, values) {
+  // Sum up all the product prices for each orderId
+  return Array.sum(values);
+};
+
+
+
+
+db.order.mapReduce(
+  map,    // Map function
+  reduce, // Reduce function
+  {
+    out: "total_price_per_order"  // Output collection
+  }
+);

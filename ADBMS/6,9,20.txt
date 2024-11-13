@@ -1,0 +1,150 @@
+Step 1: Create the STUDENT Collection
+First, populate the STUDENT collection with sample data for each student.
+
+db.STUDENT.insertMany([
+  {
+    student_id: 1,
+    student_name: "Sara",
+    address: "Baroda",
+    birthdate: ISODate("2002-07-20"),
+    CGPA: 8.5,
+    fee: 50000,
+    current_year: "SE",
+    join_date: ISODate("2021-08-01"),
+    skills: ["Programming", "AI"],
+    department: "CSE"
+  },
+  {
+    student_id: 2,
+    student_name: "Mohit",
+    address: "Ahmedabad",
+    birthdate: ISODate("2001-10-05"),
+    CGPA: 9.1,
+    fee: 60000,
+    current_year: "TE",
+    join_date: ISODate("2020-08-01"),
+    skills: ["Typing", "Database"],
+    department: "CSE"
+  },
+  {
+    student_id: 3,
+    student_name: "Rohit",
+    address: "Pune",
+    birthdate: ISODate("2004-03-15"),
+    CGPA: 7.0,
+    fee: 30000,
+    current_year: "FE",
+    join_date: ISODate("2023-08-01"),
+    skills: ["Typing", "Management"],
+    department: "IT"
+  },
+  {
+    student_id: 4,
+    student_name: "Shalini",
+    address: "Pune",
+    birthdate: ISODate("2003-05-25"),
+    CGPA: 8.7,
+    fee: 45000,
+    current_year: "BE",
+    join_date: ISODate("2020-08-01"),
+    skills: ["Typing"],
+    department: "ETC"
+  }
+  // Add more students as necessary
+]);
+
+Step 2: Implementing the Queries
+
+1. Display the count of total number of students in the institute
+
+db.STUDENT.countDocuments();
+
+2. Display all students in seniority level (based on CGPA)
+
+db.STUDENT.find().sort({ CGPA: -1 });
+
+3. List student details from Baroda or Ahmedabad in the CSE department
+
+db.STUDENT.find({
+  address: { $in: ["Baroda", "Ahmedabad"] },
+  department: "CSE"
+});
+
+4. List student_id, student_name, department, and skills for students whose birthdate is the 20th of any month
+
+db.STUDENT.find(
+  { birthdate: { $regex: "-20T" } },
+  { student_id: 1, student_name: 1, department: 1, skills: 1, _id: 0 }
+);
+
+5. Calculate the age of each student (considering today’s date)
+
+db.STUDENT.aggregate([
+  {
+    $project: {
+      student_name: 1,
+      birthdate: 1,
+      age: {
+        $divide: [{ $subtract: [new Date(), "$birthdate"] }, 1000 * 60 * 60 * 24 * 365] // Convert milliseconds to years
+      }
+    }
+  }
+]);
+
+6. List students in the CSE department whose names start with ‘S’ or ‘M’ and have the skill "Typing"
+
+db.STUDENT.find({
+  department: "CSE",
+  student_name: { $regex: "^[SsMm]", $options: "i" },
+  skills: "Typing"
+});
+
+7. Count the number of students in the IT department located in Pune
+
+db.STUDENT.countDocuments({ department: "IT", address: "Pune" });
+8. Arrange the names of students in alphabetical order whose age is between 18 and 20 in the ETC department
+javascript
+Copy code
+db.STUDENT.aggregate([
+  {
+    $project: {
+      student_name: 1,
+      department: 1,
+      birthdate: 1,
+      age: {
+        $divide: [{ $subtract: [new Date(), "$birthdate"] }, 1000 * 60 * 60 * 24 * 365]
+      }
+    }
+  },
+  { $match: { age: { $gte: 18, $lte: 20 }, department: "ETC" } },
+  { $sort: { student_name: 1 } }
+]);
+
+Step 3: Index Operations
+
+1. Create an index on student_name
+
+db.STUDENT.createIndex({ student_name: 1 });
+
+2. Get the Indexes
+
+db.STUDENT.getIndexes();
+
+3. Drop the Index on student_name
+
+db.STUDENT.dropIndex("student_name_1");
+
+Step 4: Aggregation to Display Total Number of Students in Each Department
+Using an aggregation pipeline to count students in each department:
+
+db.STUDENT.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      total_students: { $sum: 1 }
+    }
+  },
+  {
+    $project: { department: "$_id", total_students: 1, _id: 0 }
+  }
+]);
